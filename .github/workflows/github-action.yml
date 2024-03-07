@@ -16,8 +16,8 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     outputs:
-      repo-uri: ${{ steps.build-image.outputs.image }}
-
+      image-tag: ${{ steps.build-image.outputs.imagetag }}
+      registry:  ${{ steps.build-image.outputs.registry }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -42,10 +42,11 @@ jobs:
           # Build a docker container and
           # push it to ECR so that it can
           # be deployed to ECS.
-          # docker build -f Dockerfile.prod -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          # docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          # echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "image=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          docker build -f Dockerfile.prod -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "imagetag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "registry=$ECR_REGISTRY" >> $GITHUB_OUTPUT
   
   # unit-test:
   #   name: Unit Test
@@ -94,19 +95,21 @@ jobs:
 
       - name: retrieve output
         run: |
-          echo ${{ needs.build.outputs.repo-uri }}
+          echo ${{ needs.build.outputs.image-tag }}
 
       - name: Build & Deploy
         env:
           PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           HOSTNAME: ${{secrets.SSH_HOST}}
           USER_NAME: ${{secrets.USER_NAME}}
+          ECR_REGISTRY: ${{ needs.build.outputs.registry }}
+          IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
               # Now we have got the access of EC2 and we will start the deploy .
               export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} &&
               export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} &&
-              docker pull ${{ needs.build.outputs.repo-uri }} &&
-              docker run -d -p 80:80 -t ${{ needs.build.outputs.repo-uri }}
+              docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG &&
+              docker run -d -p 80:80 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
               '
