@@ -112,7 +112,7 @@ jobs:
           USER_NAME: ${{secrets.USER_NAME}}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
-          IMAGE_URI:  ${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}:${{ needs.build.outputs.image-tag }}
+          IMAGE_URI:  ${{ steps.login-ecr.outputs.registry }}/react-todo-list:${{ needs.build.outputs.image-tag }}
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
