@@ -108,8 +108,8 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: retrieve output
-      run: |
-        echo ${{ needs.build.outputs.image }}
+        run: |
+          echo ${{ needs.build.outputs.image }}
 
       - name: Build & Deploy
         env:
