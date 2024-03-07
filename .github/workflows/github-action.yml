@@ -17,26 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.build-image.outputs.image }}
-    # strategy:
-    #   matrix:
-    #     node-version: [18.x]
-    # environment: production
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      
-      # - name: Use Node.js ${{ matrix.node-version }}
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: ${{ matrix.node-version }}
-
-      # - name: Build
-      #   run: |
-      #     npm install
-      #     npm run build
-      #   env:
-      #     CI: false
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -116,14 +100,12 @@ jobs:
           PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           HOSTNAME: ${{secrets.SSH_HOST}}
           USER_NAME: ${{secrets.USER_NAME}}
-          IMAGE: ${{ needs.build.outputs.image }}
         run: |
-          echo ${IMAGE}
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
               # Now we have got the access of EC2 and we will start the deploy .
               export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} &&
               export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} &&
-              docker pull ${IMAGE} &&
-              docker run -d -p 80:80 -t ${IMAGE}
+              docker pull ${{ needs.build.outputs.image }} &&
+              docker run -d -p 80:80 -t ${{ needs.build.outputs.image }}
               '
