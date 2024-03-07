@@ -9,6 +9,8 @@ import {
   RouterProvider
 } from "react-router-dom";
 import { appRouters } from './routes';
+import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorFallback } from './components/ErrorFallBack/ErrorFallBack';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -16,7 +18,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <RouterProvider router={appRouters} />
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <RouterProvider router={appRouters} />
+      </ErrorBoundary>
     </Provider>
   </React.StrictMode>
 );
