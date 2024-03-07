@@ -16,7 +16,7 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     outputs:
-      image: ${{ steps.build-image.outputs.image }}
+      repo-uri: ${{ steps.build-image.outputs.image }}
 
     steps:
       - name: Checkout
@@ -93,7 +93,7 @@ jobs:
 
       - name: retrieve output
         run: |
-          echo ${{ needs.build.outputs.image }}
+          echo ${{ needs.build.outputs.repo-uri }}
 
       - name: Build & Deploy
         env:
@@ -106,6 +106,6 @@ jobs:
               # Now we have got the access of EC2 and we will start the deploy .
               export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} &&
               export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} &&
-              docker pull ${{ needs.build.outputs.image }} &&
-              docker run -d -p 80:80 -t ${{ needs.build.outputs.image }}
+              docker pull ${{ needs.build.outputs.repo-uri }} &&
+              docker run -d -p 80:80 -t ${{ needs.build.outputs.repo-uri }}
               '
